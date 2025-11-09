@@ -1,0 +1,7 @@
+{
+    "account": "",
+    "region": "us-west-2",
+    "buckets": ["s3-benchmarks", "s3-benchmarks--usw2"],
+    "availability_zone": "us-west-2c",
+    "canary": true
+}

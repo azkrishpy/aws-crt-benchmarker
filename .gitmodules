@@ -1,0 +1,57 @@
+[submodule "source/dependencies/aws-c-common"]
+	path = source/dependencies/aws-c-common
+	url = https://github.com/awslabs/aws-c-common.git
+[submodule "source/dependencies/aws-lc"]
+	path = source/dependencies/aws-lc
+	url = https://github.com/awslabs/aws-lc.git
+[submodule "source/dependencies/s2n"]
+	path = source/dependencies/s2n
+	url = https://github.com/aws/s2n-tls.git
+[submodule "source/dependencies/aws-c-cal"]
+	path = source/dependencies/aws-c-cal
+	url = https://github.com/awslabs/aws-c-cal.git
+[submodule "source/dependencies/aws-c-io"]
+	path = source/dependencies/aws-c-io
+	url = https://github.com/awslabs/aws-c-io.git
+[submodule "source/dependencies/aws-checksums"]
+	path = source/dependencies/aws-checksums
+	url = https://github.com/awslabs/aws-checksums.git
+[submodule "source/dependencies/aws-c-compression"]
+	path = source/dependencies/aws-c-compression
+	url = https://github.com/awslabs/aws-c-compression.git
+[submodule "source/dependencies/aws-c-http"]
+	path = source/dependencies/aws-c-http
+	url = https://github.com/awslabs/aws-c-http.git
+[submodule "source/dependencies/aws-c-sdkutils"]
+	path = source/dependencies/aws-c-sdkutils
+	url = https://github.com/awslabs/aws-c-sdkutils.git
+[submodule "source/dependencies/aws-c-auth"]
+	path = source/dependencies/aws-c-auth
+	url = https://github.com/awslabs/aws-c-auth.git
+[submodule "source/clients/aws-c-s3"]
+	path = source/clients/aws-c-s3
+	url = https://github.com/awslabs/aws-c-s3.git
+[submodule "source/clients/aws-crt-python"]
+	path = source/clients/aws-crt-python
+	url = https://github.com/awslabs/aws-crt-python.git
+[submodule "source/clients/boto3"]
+	path = source/clients/boto3
+	url = https://github.com/boto/boto3.git
+[submodule "source/clients/botocore"]
+	path = source/clients/botocore
+	url = https://github.com/boto/botocore.git
+[submodule "source/clients/s3transfer"]
+	path = source/clients/s3transfer
+	url = https://github.com/boto/s3transfer.git
+[submodule "source/clients/aws-cli"]
+	path = source/clients/aws-cli
+	url = https://github.com/aws/aws-cli.git
+[submodule "source/clients/aws-sdk-java-v2"]
+	path = source/clients/aws-sdk-java-v2
+	url = https://github.com/aws/aws-sdk-java-v2.git
+[submodule "source/clients/aws-s3-transfer-manager-rs"]
+	path = source/clients/aws-s3-transfer-manager-rs
+	url = https://github.com/awslabs/aws-s3-transfer-manager-rs.git
+[submodule "source/clients/aws-crt-java"]
+	path = source/clients/aws-crt-java
+	url = https://github.com/awslabs/aws-crt-java.git

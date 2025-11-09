@@ -1,6 +1,66 @@
+# Build artifacts
 build/
 install/
+
+# Workload files
 files/
-*.pyc
+workloads/run/
+
+# Configuration (contains secrets/personal settings)
+.crt-benchmarker.config
+.settings.json
+
+# Python
 __pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+.eggs/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+env/
+ENV/
+python-venv/
+
+# Java
+target/
+*.class
+*.jar
+*.war
+*.ear
+.mvn/
+mvn.cmd
+
+# Rust
+target/
+Cargo.lock
+**/*.rs.bk
+
+# CDK
+cdk.out/
+.cdk.staging/
+cdk.context.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
 .DS_Store
+
+# Logs
+*.log
+
+# Temporary files
+tmp/
+temp/
+*.tmp
