@@ -116,6 +116,25 @@ cb test --client crt-c          # Override client
 cb test --workload upload-5GiB-1x.json --bucket my-bucket  # Override multiple
 ```
 
+### Tmp-Test Commands
+
+Quick one-shot testing without creating workload files:
+
+```bash
+cb tmp-test upload-15MiB-1x.json                    # Quick test with defaults
+cb tmp-test download-5GiB-10x.json --client crt-c   # Override client
+cb tmp-test upload-256KiB-10_000x.json              # Many small files
+cb tmp-test upload-30GiB-1x-ram.json                # In-memory test
+```
+
+Naming convention: `{action}-{size}-{count}x[-ram].json`
+- `action`: upload or download
+- `size`: e.g., 5GiB, 256KiB, 15MiB
+- `count`: number of files (use underscores for thousands: 10_000x)
+- `-ram`: optional suffix for in-memory files
+
+This skips creating files in `workloads/src/` and running `cb workload build`. Files are prepped in `files/` and remain for inspection.
+
 ### CDK Commands
 
 ```bash
