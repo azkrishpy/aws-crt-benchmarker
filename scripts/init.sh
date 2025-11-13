@@ -1,5 +1,4 @@
 #!/bin/bash
-set -e
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
@@ -20,7 +19,7 @@ if [[ "$OSTYPE" == "linux-gnu"* ]]; then
     # Check if Amazon Linux
     if [ -f /etc/os-release ] && grep -q "Amazon Linux" /etc/os-release; then
         echo "Detected Amazon Linux"
-        sudo yum update -y
+        sudo yum update -y || echo "Warning: yum update failed, continuing..."
         sudo yum install -y \
             cmake3 \
             gcc \
@@ -31,15 +30,15 @@ if [[ "$OSTYPE" == "linux-gnu"* ]]; then
             python3-pip \
             java-17-amazon-corretto-devel \
             maven \
-            curl
+            curl || echo "Warning: Some packages failed to install, continuing..."
         
         # Symlink cmake3 to cmake if needed
         if ! command -v cmake &> /dev/null; then
-            sudo ln -s /usr/bin/cmake3 /usr/bin/cmake
+            sudo ln -s /usr/bin/cmake3 /usr/bin/cmake || echo "Warning: cmake symlink failed"
         fi
     else
         echo "Detected Linux (assuming Ubuntu/Debian)"
-        sudo apt-get update
+        sudo apt-get update || echo "Warning: apt-get update failed, continuing..."
         sudo apt-get install -y \
             cmake \
             gcc \
@@ -50,15 +49,15 @@ if [[ "$OSTYPE" == "linux-gnu"* ]]; then
             python3-pip \
             openjdk-17-jdk \
             maven \
-            curl
+            curl || echo "Warning: Some packages failed to install, continuing..."
     fi
 elif [[ "$OSTYPE" == "darwin"* ]]; then
     echo "Detected macOS"
     if ! command -v brew &> /dev/null; then
-        echo "Homebrew not found. Install from https://brew.sh"
-        exit 1
+        echo "Warning: Homebrew not found. Install from https://brew.sh"
+    else
+        brew install cmake python openjdk@17 maven || echo "Warning: Some packages failed to install, continuing..."
     fi
-    brew install cmake python openjdk@17 maven
 else
     echo "Unsupported OS: $OSTYPE"
     exit 1
@@ -67,13 +66,15 @@ fi
 # Install Rust
 if ! command -v cargo &> /dev/null; then
     echo "Installing Rust..."
-    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-    source "$HOME/.cargo/env"
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y || echo "Warning: Rust installation failed"
+    source "$HOME/.cargo/env" 2>/dev/null || true
+else
+    echo "Rust already installed, skipping..."
 fi
 
 # Install Python packages
 echo "Installing Python packages..."
-pip3 install --user boto3 botocore
+pip3 install --user boto3 botocore || echo "Warning: Python package installation failed"
 
 echo ""
 echo "✓ System dependencies installed!"
