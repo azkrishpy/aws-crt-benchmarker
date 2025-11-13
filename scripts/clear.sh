@@ -80,7 +80,7 @@ case "$1" in
             exit 1
         fi
         
-        local component="$2"
+        component="$2"
         
         # Normalize runner names
         if [ "$1" = "runner" ] && [[ "$component" != runner-* ]]; then
