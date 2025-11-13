@@ -74,30 +74,48 @@ cb test --client boto3-crt --workload download-5GiB-1x.json
 ### Build Commands
 
 ```bash
-cb build all                    # Build everything
-cb build client aws-c-s3        # Build specific C client
-cb build client python          # Build Python clients
-cb build client java            # Build Java clients
-cb build client rust            # Build Rust clients
-cb build runner c               # Build C runner
-cb build runner python          # Build Python runner
-cb build runner java            # Build Java runner
-cb build runner rust            # Build Rust runner
+cb build all                    # Build everything (prompts for confirmation)
+cb build all -f                 # Build everything (skip confirmation)
+cb build --client aws-c-s3      # Build specific C client
+cb build -c python              # Build Python clients
+cb build -c java                # Build Java clients
+cb build -c rust                # Build Rust clients
+cb build --dep aws-c-common     # Build specific C dependency
+cb build -d aws-c-io            # Build specific C dependency (short flag)
+cb build --runner c             # Build C runner
+cb build -r python              # Build Python runner
+cb build -r java                # Build Java runner
+cb build -r rust                # Build Rust runner
 ```
 
 ### Clear Commands
 
 ```bash
 cb clear all                    # Delete all build artifacts
-cb clear client aws-c-s3        # Clear specific client
-cb clear runner c               # Clear specific runner
+cb clear --client aws-c-s3      # Clear specific client
+cb clear -c python              # Clear Python client
+cb clear --dep aws-c-common     # Clear specific dependency
+cb clear -d aws-c-io            # Clear specific dependency (short flag)
+cb clear --runner c             # Clear specific runner
+cb clear -r python              # Clear Python runner
+```
+
+### Rebuild Commands
+
+```bash
+cb rebuild --client aws-c-s3    # Rebuild client and all dependents
+cb rebuild -c python            # Rebuild Python client
+cb rebuild --dep aws-c-common   # Rebuild dependency and all dependents
+cb rebuild -d aws-c-io          # Rebuild dependency (short flag)
+cb rebuild --runner c           # Rebuild runner and dependencies
+cb rebuild -r python            # Rebuild Python runner
 ```
 
 ### Workload Commands
 
 ```bash
 cb workload build               # Build all workloads
-cb workload build workloads/src/upload-5GiB-1x.json  # Build specific workload
+cb workload build upload-5GiB-1x.json  # Build specific workload (automatically checks workloads/src)
 ```
 
 ### Prep Commands
