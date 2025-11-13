@@ -69,22 +69,56 @@ clear_with_dependents() {
     clear_single_component "$component"
 }
 
-case "$1" in
+# Parse arguments
+COMPONENT_TYPE=""
+COMPONENT_NAME=""
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        all)
+            COMPONENT_TYPE="all"
+            shift
+            ;;
+        -c|-C|--client)
+            COMPONENT_TYPE="client"
+            COMPONENT_NAME="$2"
+            shift 2
+            ;;
+        -r|-R|--runner)
+            COMPONENT_TYPE="runner"
+            COMPONENT_NAME="$2"
+            shift 2
+            ;;
+        -d|-D|--dep)
+            COMPONENT_TYPE="dependency"
+            COMPONENT_NAME="$2"
+            shift 2
+            ;;
+        *)
+            echo "Unknown argument: $1"
+            echo "Usage: clear.sh {all | --client/-c <name> | --runner/-r <name> | --dep/-d <name>}"
+            exit 1
+            ;;
+    esac
+done
+
+# Execute based on parsed arguments
+case "$COMPONENT_TYPE" in
     all)
         rm -rf "$BUILD_DIR" "$INSTALL_DIR"
         echo "Cleared all build and install directories"
         ;;
     client|dependency|runner)
-        if [ -z "$2" ]; then
-            echo "Usage: clear.sh {client|dependency|runner} <name>"
+        if [ -z "$COMPONENT_NAME" ]; then
+            echo "Usage: clear.sh --${COMPONENT_TYPE}/-${COMPONENT_TYPE:0:1} <name>"
             exit 1
         fi
         
-        component="$2"
+        component="$COMPONENT_NAME"
         
         # Normalize runner names
-        if [ "$1" = "runner" ] && [[ "$component" != runner-* ]]; then
-            component="runner-s3-$component"
+        if [ "$COMPONENT_TYPE" = "runner" ] && [[ "$component" != runner-* ]]; then
+            component="s3-$component"
         fi
         
         # Clear with automatic dependent resolution
@@ -92,7 +126,7 @@ case "$1" in
         echo "Cleared $component and all its dependents"
         ;;
     *)
-        echo "Usage: clear.sh {all|client <name>|dependency <name>|runner <name>}"
+        echo "Usage: clear.sh {all | --client/-c/-C <name> | --runner/-r/-R <name> | --dep/-d/-D <name>}"
         exit 1
         ;;
 esac

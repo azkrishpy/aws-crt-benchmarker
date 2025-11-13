@@ -15,12 +15,12 @@ rebuild_component() {
     
     # Step 1: Clear the component and all its dependents
     echo "Step 1: Clearing $component_name and dependents..."
-    "$CLEAR_SCRIPT" "$component_type" "$component_name"
+    "$CLEAR_SCRIPT" "--$component_type" "$component_name"
     echo ""
     
     # Step 2: Build the component (with automatic dependency resolution)
     echo "Step 2: Building $component_name with dependencies..."
-    "$BUILD_SCRIPT" "$component_type" "$component_name"
+    "$BUILD_SCRIPT" "--$component_type" "$component_name"
     echo ""
     
     # Step 3: Build all dependents
@@ -42,14 +42,14 @@ rebuild_component() {
             # Determine the type and name for the build command
             if [[ "$dependent" == runner-* ]]; then
                 local runner_name=$(echo "$dependent" | sed 's/runner-s3-//')
-                "$BUILD_SCRIPT" runner "$runner_name"
+                "$BUILD_SCRIPT" --runner "$runner_name"
             elif [ "$dependent" = "aws-c-s3" ]; then
-                "$BUILD_SCRIPT" client "$dependent"
+                "$BUILD_SCRIPT" --client "$dependent"
             elif [ "$dependent" = "aws-s3-transfer-manager-rs" ]; then
-                "$BUILD_SCRIPT" client rust
+                "$BUILD_SCRIPT" --client rust
             else
                 # C dependency
-                "$BUILD_SCRIPT" client "$dependent"
+                "$BUILD_SCRIPT" --dep "$dependent"
             fi
         done
     fi
@@ -58,21 +58,44 @@ rebuild_component() {
     echo "=== Rebuild complete! ==="
 }
 
-case "$1" in
-    client|dependency|runner)
-        if [ -z "$2" ]; then
-            echo "Usage: rebuild.sh {client|dependency|runner} <name>"
+# Parse arguments
+COMPONENT_TYPE=""
+COMPONENT_NAME=""
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -c|-C|--client)
+            COMPONENT_TYPE="client"
+            COMPONENT_NAME="$2"
+            shift 2
+            ;;
+        -r|-R|--runner)
+            COMPONENT_TYPE="runner"
+            COMPONENT_NAME="$2"
+            shift 2
+            ;;
+        -d|-D|--dep)
+            COMPONENT_TYPE="dep"
+            COMPONENT_NAME="$2"
+            shift 2
+            ;;
+        *)
+            echo "Unknown argument: $1"
+            echo "Usage: rebuild.sh {--client/-c/-C <name> | --runner/-r/-R <name> | --dep/-d/-D <name>}"
             exit 1
-        fi
-        rebuild_component "$1" "$2"
-        ;;
-    *)
-        echo "Usage: rebuild.sh {client|dependency|runner} <name>"
-        echo ""
-        echo "Examples:"
-        echo "  rebuild.sh client aws-c-s3"
-        echo "  rebuild.sh dependency aws-c-common"
-        echo "  rebuild.sh runner c"
-        exit 1
-        ;;
-esac
+            ;;
+    esac
+done
+
+# Execute based on parsed arguments
+if [ -z "$COMPONENT_TYPE" ] || [ -z "$COMPONENT_NAME" ]; then
+    echo "Usage: rebuild.sh {--client/-c <name> | --runner/-r <name> | --dep/-d <name>}"
+    echo ""
+    echo "Examples:"
+    echo "  rebuild.sh --client aws-c-s3"
+    echo "  rebuild.sh --dep aws-c-common"
+    echo "  rebuild.sh --runner c"
+    exit 1
+fi
+
+rebuild_component "$COMPONENT_TYPE" "$COMPONENT_NAME"

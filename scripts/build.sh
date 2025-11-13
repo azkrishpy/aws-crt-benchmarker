@@ -219,8 +219,55 @@ build_rust_runner() {
     echo "Rust runner built"
 }
 
-case "$1" in
+# Parse arguments
+COMPONENT_TYPE=""
+COMPONENT_NAME=""
+FORCE=false
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        all)
+            COMPONENT_TYPE="all"
+            shift
+            ;;
+        -f|-F|--force)
+            FORCE=true
+            shift
+            ;;
+        -c|-C|--client)
+            COMPONENT_TYPE="client"
+            COMPONENT_NAME="$2"
+            shift 2
+            ;;
+        -r|-R|--runner)
+            COMPONENT_TYPE="runner"
+            COMPONENT_NAME="$2"
+            shift 2
+            ;;
+        -d|-D|--dep)
+            COMPONENT_TYPE="dependency"
+            COMPONENT_NAME="$2"
+            shift 2
+            ;;
+        *)
+            echo "Unknown argument: $1"
+            echo "Usage: build.sh {all [-f|--force] | --client/-c <name> | --runner/-r <name> | --dep/-d <name>}"
+            exit 1
+            ;;
+    esac
+done
+
+# Execute based on parsed arguments
+case "$COMPONENT_TYPE" in
     all)
+        if [ "$FORCE" = false ]; then
+            read -p "Build all components? This will take a while and occupy a lot of space as it includes c, java, python and rust clients. (y/n): " -n 1 -r
+            echo
+            if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+                echo "Build cancelled"
+                exit 0
+            fi
+        fi
         build_c_dependencies
         build_c_clients
         build_c_runners
@@ -233,11 +280,11 @@ case "$1" in
         echo "Build complete!"
         ;;
     client)
-        if [ -z "$2" ]; then
-            echo "Usage: build.sh client <name>"
+        if [ -z "$COMPONENT_NAME" ]; then
+            echo "Usage: build.sh --client/-c <name>"
             exit 1
         fi
-        case "$2" in
+        case "$COMPONENT_NAME" in
             python)
                 build_python_client
                 ;;
@@ -245,25 +292,30 @@ case "$1" in
                 build_java_client
                 ;;
             rust)
-                # Use dependency resolution for rust client
                 build_with_deps "aws-s3-transfer-manager-rs"
                 ;;
             aws-c-s3)
-                # Use dependency resolution for C client
                 build_with_deps "aws-c-s3"
                 ;;
             *)
-                # For other C dependencies, use dependency resolution
-                build_with_deps "$2"
+                echo "Unknown client: $COMPONENT_NAME"
+                exit 1
                 ;;
         esac
         ;;
-    runner)
-        if [ -z "$2" ]; then
-            echo "Usage: build.sh runner <name>"
+    dependency)
+        if [ -z "$COMPONENT_NAME" ]; then
+            echo "Usage: build.sh --dep/-d <name>"
             exit 1
         fi
-        case "$2" in
+        build_with_deps "$COMPONENT_NAME"
+        ;;
+    runner)
+        if [ -z "$COMPONENT_NAME" ]; then
+            echo "Usage: build.sh --runner/-r <name>"
+            exit 1
+        fi
+        case "$COMPONENT_NAME" in
             python)
                 build_python_runner
                 ;;
@@ -271,21 +323,18 @@ case "$1" in
                 build_java_runner
                 ;;
             c)
-                # Use dependency resolution for C runner
                 build_with_deps "runner-s3-c"
                 ;;
             rust)
-                # Use dependency resolution for Rust runner
                 build_with_deps "runner-s3-rust"
                 ;;
             *)
-                # Generic runner with dependency resolution
-                build_with_deps "runner-$2"
+                build_with_deps "runner-$COMPONENT_NAME"
                 ;;
         esac
         ;;
     *)
-        echo "Usage: build.sh {all|client <name>|runner <name>}"
+        echo "Usage: build.sh {all [-f|-F|--force] | --client/-c/-C <name> | --runner/-r/-R <name> | --dep/-d/-D <name>}"
         exit 1
         ;;
 esac
