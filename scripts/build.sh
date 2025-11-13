@@ -4,8 +4,9 @@ set -e  # Exit on any error
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 INSTALL_DIR="$REPO_ROOT/install"
 BUILD_DIR="$REPO_ROOT/build"
+DEPS_SCRIPT="$REPO_ROOT/scripts/py/dependencies.py"
 
-# Dependency build order for C
+# Dependency build order for C (kept for 'build all' command)
 C_DEPENDENCIES=(
     "aws-c-common"
     "aws-lc"
@@ -26,6 +27,80 @@ C_CLIENTS=(
 C_RUNNERS=(
     "s3-c"
 )
+
+# Check if a component is already built
+is_component_built() {
+    local component=$1
+    python3 "$DEPS_SCRIPT" is-built "$component" "$INSTALL_DIR" > /dev/null 2>&1
+    return $?
+}
+
+# Build a component with automatic dependency resolution
+build_with_deps() {
+    local component=$1
+    
+    echo "Resolving dependencies for $component..."
+    local all_deps=$(python3 "$DEPS_SCRIPT" all-deps "$component")
+    
+    for dep in $all_deps; do
+        if [ "$dep" = "$component" ]; then
+            # Build the component itself
+            build_single_component "$component"
+        else
+            # Check if dependency is already built
+            if is_component_built "$dep"; then
+                echo "  $dep already built, skipping..."
+            else
+                echo "  Building dependency: $dep"
+                build_single_component "$dep"
+            fi
+        fi
+    done
+}
+
+# Build a single component without dependency checking
+build_single_component() {
+    local component=$1
+    
+    case "$component" in
+        # C dependencies and clients
+        aws-c-common|aws-lc|s2n|aws-c-cal|aws-c-io|aws-checksums|aws-c-compression|aws-c-http|aws-c-sdkutils|aws-c-auth|aws-c-s3)
+            local extra=""
+            if [ "$component" = "aws-lc" ]; then
+                extra="-DDISABLE_GO=ON -DBUILD_LIBSSL=OFF -DDISABLE_PERL=ON"
+            fi
+            
+            local src_dir
+            if [ "$component" = "aws-c-s3" ]; then
+                src_dir="$REPO_ROOT/source/clients/$component"
+            else
+                src_dir="$REPO_ROOT/source/dependencies/$component"
+            fi
+            
+            build_cmake_project "$component" "$src_dir" "$extra"
+            ;;
+        
+        # C runners
+        runner-s3-c)
+            build_cmake_project "$component" "$REPO_ROOT/source/runners/s3-c"
+            ;;
+        
+        # Rust client
+        aws-s3-transfer-manager-rs)
+            build_rust_client
+            ;;
+        
+        # Rust runner
+        runner-s3-rust)
+            build_rust_runner
+            ;;
+        
+        *)
+            echo "Unknown component: $component"
+            exit 1
+            ;;
+    esac
+}
 
 build_cmake_project() {
     local name=$1
@@ -170,10 +245,16 @@ case "$1" in
                 build_java_client
                 ;;
             rust)
-                build_rust_client
+                # Use dependency resolution for rust client
+                build_with_deps "aws-s3-transfer-manager-rs"
+                ;;
+            aws-c-s3)
+                # Use dependency resolution for C client
+                build_with_deps "aws-c-s3"
                 ;;
             *)
-                build_cmake_project "$2" "$REPO_ROOT/source/clients/$2"
+                # For other C dependencies, use dependency resolution
+                build_with_deps "$2"
                 ;;
         esac
         ;;
@@ -189,11 +270,17 @@ case "$1" in
             java)
                 build_java_runner
                 ;;
+            c)
+                # Use dependency resolution for C runner
+                build_with_deps "runner-s3-c"
+                ;;
             rust)
-                build_rust_runner
+                # Use dependency resolution for Rust runner
+                build_with_deps "runner-s3-rust"
                 ;;
             *)
-                build_cmake_project "runner-$2" "$REPO_ROOT/source/runners/$2"
+                # Generic runner with dependency resolution
+                build_with_deps "runner-$2"
                 ;;
         esac
         ;;
