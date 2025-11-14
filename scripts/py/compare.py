@@ -268,13 +268,13 @@ def checkout_branch(repo_path, branch, verbose):
 
 def get_build_type(client_name):
     """Determine build type based on client name"""
-    if client_name == 'crt-c' or client_name == 'c':
+    if client_name == 'crt-c':
         return 'aws-c-s3'
     elif client_name in ['crt-python', 'boto3-crt', 'boto3-classic', 'cli-crt', 'cli-classic']:
         return 'python'
     elif client_name in ['crt-java', 'sdk-java-client-crt', 'sdk-java-client-classic', 'sdk-java-tm-crt', 'sdk-java-tm-classic']:
         return 'java'
-    elif client_name == 'sdk-rust-tm' or client_name == 'rust':
+    elif client_name == 'sdk-rust-tm':
         return 'rust'
     else:
         raise Exception(f'Unknown client: {client_name}')

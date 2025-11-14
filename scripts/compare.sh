@@ -83,6 +83,15 @@ get_client_repo() {
     esac
 }
 
+get_client_name() {
+    local client=$1
+    case "$client" in
+        c) echo "crt-c" ;;
+        rust) echo "sdk-rust-tm" ;;
+        *) echo "$client";;
+    esac
+}
+
 # Parse client:branch format
 parse_client_spec() {
     local spec=$1
@@ -96,6 +105,9 @@ parse_client_spec() {
 # Parse client1 and client2
 read CLIENT1_NAME CLIENT1_BRANCH <<< $(parse_client_spec "$CLIENT1")
 read CLIENT2_NAME CLIENT2_BRANCH <<< $(parse_client_spec "$CLIENT2")
+
+CLIENT1_NAME=$(get_client_name "$CLIENT1_NAME")
+CLIENT2_NAME=$(get_client_name "$CLIENT2_NAME")
 
 # Get repo paths
 CLIENT1_REPO=$(get_client_repo "$CLIENT1_NAME")
