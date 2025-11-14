@@ -432,7 +432,7 @@ def parse_metrics(output):
 
 
 def format_comparison_table(client1_name, client1_branch, metrics1, client2_name, client2_branch, metrics2):
-    """Format detailed comparison table with per-run data"""
+    """Format two separate comparison tables: per-run data and summary statistics"""
     
     label1 = f"{client1_name}:{client1_branch}"
     label2 = f"{client2_name}:{client2_branch}"
@@ -442,12 +442,12 @@ def format_comparison_table(client1_name, client1_branch, metrics1, client2_name
     lines.append(f"Comparing: {label1} vs {label2}")
     lines.append("")
     
-    # Table header
-    lines.append("| Run | " + label1 + " Duration (s) | " + label1 + " Throughput (Gb/s) | " + 
-                 label2 + " Duration (s) | " + label2 + " Throughput (Gb/s) |")
-    lines.append("|-----|" + "---|" * 4)
+    # TABLE 1: Run Data
+    lines.append("## Run Results")
+    lines.append("")
+    lines.append(f"| Run # | {label1} Duration (s) | {label1} Throughput (Gb/s) | {label2} Duration (s) | {label2} Throughput (Gb/s) |")
+    lines.append("|-----|----------------------|---------------------------|----------------------|---------------------------|")
     
-    # Per-run data
     max_runs = max(len(metrics1['runs']), len(metrics2['runs']))
     for i in range(max_runs):
         run_num = i + 1
@@ -468,25 +468,28 @@ def format_comparison_table(client1_name, client1_branch, metrics1, client2_name
         
         lines.append(f"| {run_num} | {dur1} | {gbps1} | {dur2} | {gbps2} |")
     
-    # Throughput stats
-    lines.append("| **Throughput (Gb/s)** | | | | |")
+    lines.append("")
+    
+    # TABLE 2: Summary Statistics
+    lines.append("## Summary Statistics")
+    lines.append("")
+    lines.append(f"| Metric | {label1} | {label2} |")
+    lines.append("|--------|----------|----------|")
+    
     if metrics1['throughput_median'] is not None and metrics2['throughput_median'] is not None:
-        lines.append(f"| Median | | {metrics1['throughput_median']:.2f} | | {metrics2['throughput_median']:.2f} |")
-        lines.append(f"| Mean | | {metrics1['throughput_mean']:.2f} | | {metrics2['throughput_mean']:.2f} |")
-        lines.append(f"| Min | | {metrics1['throughput_min']:.2f} | | {metrics2['throughput_min']:.2f} |")
-        lines.append(f"| Max | | {metrics1['throughput_max']:.2f} | | {metrics2['throughput_max']:.2f} |")
+        lines.append(f"| T-Median (Gb/s) | {metrics1['throughput_median']:.2f} | {metrics2['throughput_median']:.2f} |")
+        lines.append(f"| T-Mean (Gb/s) | {metrics1['throughput_mean']:.2f} | {metrics2['throughput_mean']:.2f} |")
+        lines.append(f"| T-Min (Gb/s) | {metrics1['throughput_min']:.2f} | {metrics2['throughput_min']:.2f} |")
+        lines.append(f"| T-Max (Gb/s) | {metrics1['throughput_max']:.2f} | {metrics2['throughput_max']:.2f} |")
     
-    # Duration stats
-    lines.append("| **Duration (Secs)** | | | | |")
     if metrics1['duration_median'] is not None and metrics2['duration_median'] is not None:
-        lines.append(f"| Median | {metrics1['duration_median']:.2f} | | {metrics2['duration_median']:.2f} | |")
-        lines.append(f"| Mean | {metrics1['duration_mean']:.2f} | | {metrics2['duration_mean']:.2f} | |")
-        lines.append(f"| Min | {metrics1['duration_min']:.2f} | | {metrics2['duration_min']:.2f} | |")
-        lines.append(f"| Max | {metrics1['duration_max']:.2f} | | {metrics2['duration_max']:.2f} | |")
+        lines.append(f"| D-Median (s) | {metrics1['duration_median']:.2f} | {metrics2['duration_median']:.2f} |")
+        lines.append(f"| D-Mean (s) | {metrics1['duration_mean']:.2f} | {metrics2['duration_mean']:.2f} |")
+        lines.append(f"| D-Min (s) | {metrics1['duration_min']:.2f} | {metrics2['duration_min']:.2f} |")
+        lines.append(f"| D-Max (s) | {metrics1['duration_max']:.2f} | {metrics2['duration_max']:.2f} |")
     
-    # Peak RSS
     if metrics1['peak_rss'] is not None and metrics2['peak_rss'] is not None:
-        lines.append(f"| **Peak RSS (MiB)** | | {metrics1['peak_rss']:.2f} | | {metrics2['peak_rss']:.2f} |")
+        lines.append(f"| Peak RSS (MiB) | {metrics1['peak_rss']:.2f} | {metrics2['peak_rss']:.2f} |")
     
     lines.append("")
     
