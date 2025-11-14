@@ -431,15 +431,30 @@ def parse_metrics(output):
     return metrics
 
 
-def format_comparison_table(client1_name, client1_branch, metrics1, client2_name, client2_branch, metrics2):
+def format_comparison_table(client1_name, client1_branch, metrics1, client2_name, client2_branch, metrics2, workload):
     """Format two separate comparison tables: per-run data and summary statistics"""
     
     label1 = f"{client1_name}:{client1_branch}"
     label2 = f"{client2_name}:{client2_branch}"
     
+    # Build workload summary
+    num_tasks = len(workload['tasks'])
+    total_bytes = sum(task['size'] for task in workload['tasks'])
+    total_gib = total_bytes / (1024 ** 3)
+    
+    # Determine workload type
+    actions = set(task['action'] for task in workload['tasks'])
+    if len(actions) == 1:
+        action_str = list(actions)[0]
+    else:
+        action_str = "mixed"
+    
+    workload_desc = f"{action_str}, {num_tasks} file(s), {total_gib:.2f} GiB total"
+    
     lines = []
     lines.append("")
     lines.append(f"Comparing: {label1} vs {label2}")
+    lines.append(f"Workload: {workload_desc}")
     lines.append("")
     
     # TABLE 1: Run Data
@@ -551,7 +566,8 @@ def main():
         # Display comparison table (always shown, regardless of verbose mode)
         table = format_comparison_table(
             args.client1, args.client1_branch, metrics1,
-            args.client2, args.client2_branch, metrics2
+            args.client2, args.client2_branch, metrics2,
+            workload
         )
         print(table)
         
