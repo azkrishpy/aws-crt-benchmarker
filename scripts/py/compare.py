@@ -432,60 +432,62 @@ def parse_metrics(output):
 
 
 def format_comparison_table(client1_name, client1_branch, metrics1, client2_name, client2_branch, metrics2):
-    """Format comparison table for display"""
+    """Format detailed comparison table with per-run data"""
     
-    # Build client labels
     label1 = f"{client1_name}:{client1_branch}"
     label2 = f"{client2_name}:{client2_branch}"
     
-    # Determine column widths
-    metric_col_width = 25
-    value_col_width = max(len(label1), len(label2), 15)
-    
-    # Build table
     lines = []
     lines.append("")
     lines.append(f"Comparing: {label1} vs {label2}")
     lines.append("")
     
-    # Header
-    sep = "─" * metric_col_width + "┬" + "─" * value_col_width + "┬" + "─" * value_col_width
-    lines.append("┌" + sep[1:-1] + "┐")
-    lines.append(f"│ {'Metric':<{metric_col_width-2}} │ {label1:<{value_col_width-2}} │ {label2:<{value_col_width-2}} │")
-    lines.append("├" + sep[1:-1] + "┤")
+    # Table header
+    lines.append("| Run | " + label1 + " Duration (s) | " + label1 + " Throughput (Gb/s) | " + 
+                 label2 + " Duration (s) | " + label2 + " Throughput (Gb/s) |")
+    lines.append("|-----|" + "---|" * 4)
     
-    # Throughput section
-    lines.append(f"│ {'Throughput (Gb/s)':<{metric_col_width-2}} │ {'':<{value_col_width-2}} │ {'':<{value_col_width-2}} │")
+    # Per-run data
+    max_runs = max(len(metrics1['runs']), len(metrics2['runs']))
+    for i in range(max_runs):
+        run_num = i + 1
+        
+        if i < len(metrics1['runs']):
+            dur1 = f"{metrics1['runs'][i]['secs']:.2f}"
+            gbps1 = f"{metrics1['runs'][i]['gbps']:.2f}"
+        else:
+            dur1 = "N/A"
+            gbps1 = "N/A"
+        
+        if i < len(metrics2['runs']):
+            dur2 = f"{metrics2['runs'][i]['secs']:.2f}"
+            gbps2 = f"{metrics2['runs'][i]['gbps']:.2f}"
+        else:
+            dur2 = "N/A"
+            gbps2 = "N/A"
+        
+        lines.append(f"| {run_num} | {dur1} | {gbps1} | {dur2} | {gbps2} |")
     
+    # Throughput stats
+    lines.append("| **Throughput (Gb/s)** | | | | |")
     if metrics1['throughput_median'] is not None and metrics2['throughput_median'] is not None:
-        lines.append(f"│ {'  Median':<{metric_col_width-2}} │ {metrics1['throughput_median']:<{value_col_width-2}.2f} │ {metrics2['throughput_median']:<{value_col_width-2}.2f} │")
-        lines.append(f"│ {'  Mean':<{metric_col_width-2}} │ {metrics1['throughput_mean']:<{value_col_width-2}.2f} │ {metrics2['throughput_mean']:<{value_col_width-2}.2f} │")
-        lines.append(f"│ {'  Min':<{metric_col_width-2}} │ {metrics1['throughput_min']:<{value_col_width-2}.2f} │ {metrics2['throughput_min']:<{value_col_width-2}.2f} │")
-        lines.append(f"│ {'  Max':<{metric_col_width-2}} │ {metrics1['throughput_max']:<{value_col_width-2}.2f} │ {metrics2['throughput_max']:<{value_col_width-2}.2f} │")
-    else:
-        lines.append(f"│ {'  (metrics not available)':<{metric_col_width-2}} │ {'':<{value_col_width-2}} │ {'':<{value_col_width-2}} │")
+        lines.append(f"| Median | | {metrics1['throughput_median']:.2f} | | {metrics2['throughput_median']:.2f} |")
+        lines.append(f"| Mean | | {metrics1['throughput_mean']:.2f} | | {metrics2['throughput_mean']:.2f} |")
+        lines.append(f"| Min | | {metrics1['throughput_min']:.2f} | | {metrics2['throughput_min']:.2f} |")
+        lines.append(f"| Max | | {metrics1['throughput_max']:.2f} | | {metrics2['throughput_max']:.2f} |")
     
-    # Duration section
-    lines.append(f"│ {'Duration (Secs)':<{metric_col_width-2}} │ {'':<{value_col_width-2}} │ {'':<{value_col_width-2}} │")
-    
+    # Duration stats
+    lines.append("| **Duration (Secs)** | | | | |")
     if metrics1['duration_median'] is not None and metrics2['duration_median'] is not None:
-        lines.append(f"│ {'  Median':<{metric_col_width-2}} │ {metrics1['duration_median']:<{value_col_width-2}.2f} │ {metrics2['duration_median']:<{value_col_width-2}.2f} │")
-        lines.append(f"│ {'  Mean':<{metric_col_width-2}} │ {metrics1['duration_mean']:<{value_col_width-2}.2f} │ {metrics2['duration_mean']:<{value_col_width-2}.2f} │")
-        lines.append(f"│ {'  Min':<{metric_col_width-2}} │ {metrics1['duration_min']:<{value_col_width-2}.2f} │ {metrics2['duration_min']:<{value_col_width-2}.2f} │")
-        lines.append(f"│ {'  Max':<{metric_col_width-2}} │ {metrics1['duration_max']:<{value_col_width-2}.2f} │ {metrics2['duration_max']:<{value_col_width-2}.2f} │")
-    else:
-        lines.append(f"│ {'  (metrics not available)':<{metric_col_width-2}} │ {'':<{value_col_width-2}} │ {'':<{value_col_width-2}} │")
+        lines.append(f"| Median | {metrics1['duration_median']:.2f} | | {metrics2['duration_median']:.2f} | |")
+        lines.append(f"| Mean | {metrics1['duration_mean']:.2f} | | {metrics2['duration_mean']:.2f} | |")
+        lines.append(f"| Min | {metrics1['duration_min']:.2f} | | {metrics2['duration_min']:.2f} | |")
+        lines.append(f"| Max | {metrics1['duration_max']:.2f} | | {metrics2['duration_max']:.2f} | |")
     
     # Peak RSS
     if metrics1['peak_rss'] is not None and metrics2['peak_rss'] is not None:
-        lines.append(f"│ {'Peak RSS (MiB)':<{metric_col_width-2}} │ {metrics1['peak_rss']:<{value_col_width-2}.2f} │ {metrics2['peak_rss']:<{value_col_width-2}.2f} │")
-    else:
-        val1 = f"{metrics1['peak_rss']:.2f}" if metrics1['peak_rss'] is not None else "N/A"
-        val2 = f"{metrics2['peak_rss']:.2f}" if metrics2['peak_rss'] is not None else "N/A"
-        lines.append(f"│ {'Peak RSS (MiB)':<{metric_col_width-2}} │ {val1:<{value_col_width-2}} │ {val2:<{value_col_width-2}} │")
+        lines.append(f"| **Peak RSS (MiB)** | | {metrics1['peak_rss']:.2f} | | {metrics2['peak_rss']:.2f} |")
     
-    # Footer
-    lines.append("└" + sep[1:-1] + "┘")
     lines.append("")
     
     return '\n'.join(lines)
