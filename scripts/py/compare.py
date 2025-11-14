@@ -431,7 +431,7 @@ def parse_metrics(output):
     return metrics
 
 
-def format_comparison_table(client1_name, client1_branch, metrics1, client2_name, client2_branch, metrics2, workload):
+def format_comparison_table(client1_name, client1_branch, metrics1, client2_name, client2_branch, metrics2, workload, bucket, region, throughput):
     """Format two separate comparison tables: per-run data and summary statistics"""
     
     label1 = f"{client1_name}:{client1_branch}"
@@ -455,6 +455,7 @@ def format_comparison_table(client1_name, client1_branch, metrics1, client2_name
     lines.append("")
     lines.append(f"Comparing: {label1} vs {label2}")
     lines.append(f"Workload: {workload_desc}")
+    lines.append(f"Bucket: {bucket}, Region: {region}, Target Throughput: {throughput} Gb/s")
     lines.append("")
     
     # TABLE 1: Run Data
@@ -567,7 +568,7 @@ def main():
         table = format_comparison_table(
             args.client1, args.client1_branch, metrics1,
             args.client2, args.client2_branch, metrics2,
-            workload
+            workload, args.bucket, args.region, args.throughput
         )
         print(table)
         
