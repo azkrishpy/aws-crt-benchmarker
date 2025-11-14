@@ -134,15 +134,15 @@ cb test --client crt-c          # Override client
 cb test --workload upload-5GiB-1x.json --bucket my-bucket  # Override multiple
 ```
 
-### Tmp-Test Commands
+### Auto-Test Commands
 
 Quick one-shot testing without creating workload files:
 
 ```bash
-cb tmp-test upload-15MiB-1x.json                    # Quick test with defaults
-cb tmp-test download-5GiB-10x.json --client crt-c   # Override client
-cb tmp-test upload-256KiB-10_000x.json              # Many small files
-cb tmp-test upload-30GiB-1x-ram.json                # In-memory test
+cb auto-test upload-15MiB-1x.json                    # Quick test with defaults
+cb auto-test download-5GiB-10x.json --client crt-c   # Override client
+cb auto-test upload-256KiB-10_000x.json              # Many small files
+cb auto-test upload-30GiB-1x-ram.json                # In-memory test
 ```
 
 Naming convention: `{action}-{size}-{count}x[-ram].json`
@@ -152,6 +152,43 @@ Naming convention: `{action}-{size}-{count}x[-ram].json`
 - `-ram`: optional suffix for in-memory files
 
 This skips creating files in `workloads/src/` and running `cb workload build`. Files are prepped in `files/` and remain for inspection.
+
+### Compare Commands
+
+Compare two S3 clients by running benchmarks and displaying side-by-side results:
+
+```bash
+# Compare same client on different branches
+cb compare -c1 crt-c:main -c2 crt-c:feature-branch -p upload-5GiB-10x
+
+# Compare different clients
+cb compare -c1 boto3-crt -c2 crt-python -p upload-1GiB-10x download-500MiB-5x
+
+# Use JSON payload file
+cb compare -c1 crt-c:main -c2 sdk-rust-tm:main -p payload.json
+
+# Verbose mode for debugging
+cb compare -c1 crt-c:main -c2 crt-c:test -p upload-1GiB-1x -v
+
+# Override config settings
+cb compare -c1 crt-c:main -c2 sdk-rust-tm:main -p upload-5GiB-10x \
+  --bucket my-bucket --region us-west-2 --throughput 100.0
+```
+
+**Options:**
+- `-c1, --client1 CLIENT[:BRANCH]` - First client (branch defaults to main)
+- `-c2, --client2 CLIENT[:BRANCH]` - Second client (branch defaults to main)
+- `-p, --payload PAYLOAD...` - Workload spec(s) or JSON file
+- `-v, --verbose` - Show all logs (default: suppress, show only comparison)
+- `--bucket, --region, --throughput` - Override config settings
+
+**How it works:**
+1. Parses payload into combined workload
+2. Preps files once (creates local files, uploads to S3)
+3. For each client: checkout branch → rebuild → run benchmark
+4. Displays two tables:
+   - Per-run results (duration and throughput for each run)
+   - Summary statistics (median, mean, min, max for throughput/duration, peak RSS)
 
 ### CDK Commands
 

@@ -21,7 +21,8 @@ C_DEPENDENCIES=(
 )
 
 C_CLIENTS=(
-    "aws-c-s3"
+    "aws-c-s3",
+    "c"
 )
 
 C_RUNNERS=(
@@ -132,7 +133,7 @@ build_c_dependencies() {
 
 build_c_clients() {
     for client in "${C_CLIENTS[@]}"; do
-        build_cmake_project "$client" "$REPO_ROOT/source/clients/$client"
+        build_cmake_project "$client" "$REPO_ROOT/source/clients/aws-c-s3"
     done
 }
 

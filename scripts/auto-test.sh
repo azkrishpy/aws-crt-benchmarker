@@ -13,24 +13,12 @@ fi
 
 # First arg is the workload filename
 WORKLOAD_NAME="$1"
-shift
 
-# Parse remaining arguments (override config)
-while [[ $# -gt 0 ]]; do
-    case $1 in
-        --client) CLIENT="$2"; shift 2 ;;
-        --bucket) BUCKET="$2"; shift 2 ;;
-        --region) REGION="$2"; shift 2 ;;
-        --throughput) THROUGHPUT="$2"; shift 2 ;;
-        *) echo "Unknown option: $1"; exit 1 ;;
-    esac
-done
-
-# Validate required parameters
+# Validate required parameters early
 if [ -z "$WORKLOAD_NAME" ]; then
-    echo "Usage: tmp-test.sh WORKLOAD_NAME [OPTIONS]"
+    echo "Usage: auto-test.sh WORKLOAD_NAME [OPTIONS]"
     echo ""
-    echo "Example: tmp-test.sh upload-15MiB-1x.json"
+    echo "Example: auto-test.sh upload-15MiB-1x.json"
     echo ""
     echo "Workload naming convention: {action}-{size}-{count}x[-ram].json"
     echo "  action: upload or download"
@@ -45,6 +33,19 @@ if [ -z "$WORKLOAD_NAME" ]; then
     echo "  --throughput GBPS             Target throughput in Gbps"
     exit 1
 fi
+
+shift
+
+# Parse remaining arguments (override config)
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --client) CLIENT="$2"; shift 2 ;;
+        --bucket) BUCKET="$2"; shift 2 ;;
+        --region) REGION="$2"; shift 2 ;;
+        --throughput) THROUGHPUT="$2"; shift 2 ;;
+        *) echo "Unknown option: $1"; exit 1 ;;
+    esac
+done
 
 if [ -z "$CLIENT" ] || [ -z "$BUCKET" ] || [ -z "$REGION" ] || [ -z "$THROUGHPUT" ]; then
     echo "Error: Missing required test parameters (client, bucket, region, throughput)"
@@ -77,8 +78,8 @@ echo "Running test..."
 cd "$FILES_DIR"
 
 case "$CLIENT" in
-    crt-c)
-        "$REPO_ROOT/install/bin/s3-c" "$CLIENT" "$TMP_WORKLOAD" "$BUCKET" "$REGION" "$THROUGHPUT"
+    crt-c|c)
+        "$REPO_ROOT/install/bin/s3-c" "crt-c" "$TMP_WORKLOAD" "$BUCKET" "$REGION" "$THROUGHPUT"
         ;;
     crt-python|boto3-crt|boto3-classic|cli-crt|cli-classic)
         "$REPO_ROOT/install/python-venv/bin/python3" \
@@ -89,9 +90,9 @@ case "$CLIENT" in
         java -jar "$REPO_ROOT/source/runners/s3-java/target/s3-benchrunner-java-1.0-SNAPSHOT.jar" \
             "$CLIENT" "$TMP_WORKLOAD" "$BUCKET" "$REGION" "$THROUGHPUT"
         ;;
-    sdk-rust-tm)
+    sdk-rust-tm|rust)
         AWS_REGION="$REGION" "$REPO_ROOT/source/runners/s3-rust/target/release/s3-benchrunner-rust" \
-            "$CLIENT" "$TMP_WORKLOAD" "$BUCKET" "$REGION" "$THROUGHPUT"
+            "sdk-rust-tm" "$TMP_WORKLOAD" "$BUCKET" "$REGION" "$THROUGHPUT"
         ;;
     *)
         echo "Unknown client: $CLIENT"
