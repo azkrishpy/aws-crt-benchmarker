@@ -2317,6 +2317,7 @@ dependencies = [
  "clap",
  "fastrand",
  "futures-util",
+ "libc",
  "opentelemetry",
  "opentelemetry-semantic-conventions",
  "opentelemetry-stdout",

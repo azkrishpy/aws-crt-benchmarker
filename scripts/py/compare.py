@@ -457,24 +457,32 @@ def format_comparison_table(client1_name, client1_branch, metrics1, client2_name
     # Throughput section
     lines.append(f"│ {'Throughput (Gb/s)':<{metric_col_width-2}} │ {'':<{value_col_width-2}} │ {'':<{value_col_width-2}} │")
     
-    if metrics1['throughput_median'] is not None:
+    if metrics1['throughput_median'] is not None and metrics2['throughput_median'] is not None:
         lines.append(f"│ {'  Median':<{metric_col_width-2}} │ {metrics1['throughput_median']:<{value_col_width-2}.2f} │ {metrics2['throughput_median']:<{value_col_width-2}.2f} │")
         lines.append(f"│ {'  Mean':<{metric_col_width-2}} │ {metrics1['throughput_mean']:<{value_col_width-2}.2f} │ {metrics2['throughput_mean']:<{value_col_width-2}.2f} │")
         lines.append(f"│ {'  Min':<{metric_col_width-2}} │ {metrics1['throughput_min']:<{value_col_width-2}.2f} │ {metrics2['throughput_min']:<{value_col_width-2}.2f} │")
         lines.append(f"│ {'  Max':<{metric_col_width-2}} │ {metrics1['throughput_max']:<{value_col_width-2}.2f} │ {metrics2['throughput_max']:<{value_col_width-2}.2f} │")
+    else:
+        lines.append(f"│ {'  (metrics not available)':<{metric_col_width-2}} │ {'':<{value_col_width-2}} │ {'':<{value_col_width-2}} │")
     
     # Duration section
     lines.append(f"│ {'Duration (Secs)':<{metric_col_width-2}} │ {'':<{value_col_width-2}} │ {'':<{value_col_width-2}} │")
     
-    if metrics1['duration_median'] is not None:
+    if metrics1['duration_median'] is not None and metrics2['duration_median'] is not None:
         lines.append(f"│ {'  Median':<{metric_col_width-2}} │ {metrics1['duration_median']:<{value_col_width-2}.2f} │ {metrics2['duration_median']:<{value_col_width-2}.2f} │")
         lines.append(f"│ {'  Mean':<{metric_col_width-2}} │ {metrics1['duration_mean']:<{value_col_width-2}.2f} │ {metrics2['duration_mean']:<{value_col_width-2}.2f} │")
         lines.append(f"│ {'  Min':<{metric_col_width-2}} │ {metrics1['duration_min']:<{value_col_width-2}.2f} │ {metrics2['duration_min']:<{value_col_width-2}.2f} │")
         lines.append(f"│ {'  Max':<{metric_col_width-2}} │ {metrics1['duration_max']:<{value_col_width-2}.2f} │ {metrics2['duration_max']:<{value_col_width-2}.2f} │")
+    else:
+        lines.append(f"│ {'  (metrics not available)':<{metric_col_width-2}} │ {'':<{value_col_width-2}} │ {'':<{value_col_width-2}} │")
     
     # Peak RSS
-    if metrics1['peak_rss'] is not None:
+    if metrics1['peak_rss'] is not None and metrics2['peak_rss'] is not None:
         lines.append(f"│ {'Peak RSS (MiB)':<{metric_col_width-2}} │ {metrics1['peak_rss']:<{value_col_width-2}.2f} │ {metrics2['peak_rss']:<{value_col_width-2}.2f} │")
+    else:
+        val1 = f"{metrics1['peak_rss']:.2f}" if metrics1['peak_rss'] is not None else "N/A"
+        val2 = f"{metrics2['peak_rss']:.2f}" if metrics2['peak_rss'] is not None else "N/A"
+        lines.append(f"│ {'Peak RSS (MiB)':<{metric_col_width-2}} │ {val1:<{value_col_width-2}} │ {val2:<{value_col_width-2}} │")
     
     # Footer
     lines.append("└" + sep[1:-1] + "┘")

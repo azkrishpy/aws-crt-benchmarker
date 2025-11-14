@@ -78,6 +78,10 @@ async fn execute(args: &Args) -> Result<()> {
     let bytes_per_run: u64 = workload.tasks.iter().map(|x| x.size).sum();
     let gigabits_per_run = bytes_to_gigabits(bytes_per_run);
 
+    // Track durations and throughputs for stats
+    let mut durations: Vec<f64> = Vec::new();
+    let mut throughputs: Vec<f64> = Vec::new();
+
     // repeat benchmark until we exceed max_repeat_count or max_repeat_secs
     let app_start = Instant::now();
     for run_num in 1..=workload.max_repeat_count {
@@ -96,6 +100,10 @@ async fn execute(args: &Args) -> Result<()> {
             .await?;
 
         let run_secs = run_start.elapsed().as_secs_f64();
+        let run_gbps = gigabits_per_run / run_secs;
+
+        durations.push(run_secs);
+        throughputs.push(run_gbps);
 
         // flush any telemetry
         if let Some(telemetry) = &mut telemetry {
@@ -106,12 +114,7 @@ async fn execute(args: &Args) -> Result<()> {
             ));
         }
 
-        eprintln!(
-            "Run:{} Secs:{:.6} Gb/s:{:.6}",
-            run_num,
-            run_secs,
-            gigabits_per_run / run_secs
-        );
+        eprintln!("Run:{} Secs:{:.6} Gb/s:{:.6}", run_num, run_secs, run_gbps);
 
         // break out if we've exceeded max_repeat_secs
         if app_start.elapsed().as_secs_f64() >= workload.max_repeat_secs {
@@ -119,7 +122,79 @@ async fn execute(args: &Args) -> Result<()> {
         }
     }
 
+    // Print overall statistics
+    print_stats("Throughput (Gb/s)", &throughputs);
+    print_stats("Duration (Secs)", &durations);
+
+    // Print peak RSS using getrusage (same as C runner)
+    let peak_rss_mib = get_peak_rss_mib();
+    eprintln!("Peak RSS:{:.6} MiB", peak_rss_mib);
+
     Ok(())
+}
+
+/// Get peak RSS (resident set size) in MiB using getrusage
+fn get_peak_rss_mib() -> f64 {
+    unsafe {
+        let mut usage: libc::rusage = std::mem::zeroed();
+        let result = libc::getrusage(libc::RUSAGE_SELF, &mut usage);
+        if result == 0 {
+            // On Linux, ru_maxrss is in kilobytes
+            // On macOS, ru_maxrss is in bytes
+            #[cfg(target_os = "linux")]
+            {
+                usage.ru_maxrss as f64 / 1024.0
+            }
+            #[cfg(target_os = "macos")]
+            {
+                usage.ru_maxrss as f64 / (1024.0 * 1024.0)
+            }
+            #[cfg(not(any(target_os = "linux", target_os = "macos")))]
+            {
+                0.0
+            }
+        } else {
+            0.0
+        }
+    }
+}
+
+/// Calculate and print statistics (median, mean, min, max, variance, stddev)
+fn print_stats(label: &str, values: &[f64]) {
+    if values.is_empty() {
+        return;
+    }
+
+    let mut sorted = values.to_vec();
+    sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
+
+    let n = sorted.len() as f64;
+    let min = sorted[0];
+    let max = sorted[sorted.len() - 1];
+    let mean = sorted.iter().sum::<f64>() / n;
+
+    let median = if sorted.len() % 2 == 1 {
+        sorted[sorted.len() / 2]
+    } else {
+        let mid = sorted.len() / 2;
+        (sorted[mid - 1] + sorted[mid]) / 2.0
+    };
+
+    let variance = sorted
+        .iter()
+        .map(|x| {
+            let diff = x - mean;
+            diff * diff
+        })
+        .sum::<f64>()
+        / n;
+
+    let stddev = variance.sqrt();
+
+    eprintln!(
+        "Overall {} Median:{:.6} Mean:{:.6} Min:{:.6} Max:{:.6} Variance:{:.6} StdDev:{:.6}",
+        label, median, mean, min, max, variance, stddev
+    );
 }
 
 async fn new_runner(args: &Args) -> Result<Box<dyn RunBenchmark>> {
