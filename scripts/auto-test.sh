@@ -28,9 +28,9 @@ done
 
 # Validate required parameters
 if [ -z "$WORKLOAD_NAME" ]; then
-    echo "Usage: tmp-test.sh WORKLOAD_NAME [OPTIONS]"
+    echo "Usage: auto-test.sh WORKLOAD_NAME [OPTIONS]"
     echo ""
-    echo "Example: tmp-test.sh upload-15MiB-1x.json"
+    echo "Example: auto-test.sh upload-15MiB-1x.json"
     echo ""
     echo "Workload naming convention: {action}-{size}-{count}x[-ram].json"
     echo "  action: upload or download"
