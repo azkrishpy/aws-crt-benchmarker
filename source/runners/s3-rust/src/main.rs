@@ -114,7 +114,7 @@ async fn execute(args: &Args) -> Result<()> {
             ));
         }
 
-        eprintln!("Run:{} Secs:{:.6} Gb/s:{:.6}", run_num, run_secs, run_gbps);
+        println!("Run:{} Secs:{:.6} Gb/s:{:.6}", run_num, run_secs, run_gbps);
 
         // break out if we've exceeded max_repeat_secs
         if app_start.elapsed().as_secs_f64() >= workload.max_repeat_secs {
@@ -128,7 +128,7 @@ async fn execute(args: &Args) -> Result<()> {
 
     // Print peak RSS using getrusage (same as C runner)
     let peak_rss_mib = get_peak_rss_mib();
-    eprintln!("Peak RSS:{:.6} MiB", peak_rss_mib);
+    println!("Peak RSS:{:.6} MiB", peak_rss_mib);
 
     Ok(())
 }
@@ -191,7 +191,7 @@ fn print_stats(label: &str, values: &[f64]) {
 
     let stddev = variance.sqrt();
 
-    eprintln!(
+    println!(
         "Overall {} Median:{:.6} Mean:{:.6} Min:{:.6} Max:{:.6} Variance:{:.6} StdDev:{:.6}",
         label, median, mean, min, max, variance, stddev
     );
