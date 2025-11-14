@@ -77,8 +77,8 @@ echo "Running test..."
 cd "$FILES_DIR"
 
 case "$CLIENT" in
-    crt-c)
-        "$REPO_ROOT/install/bin/s3-c" "$CLIENT" "$TMP_WORKLOAD" "$BUCKET" "$REGION" "$THROUGHPUT"
+    crt-c|c)
+        "$REPO_ROOT/install/bin/s3-c" "crt-c" "$TMP_WORKLOAD" "$BUCKET" "$REGION" "$THROUGHPUT"
         ;;
     crt-python|boto3-crt|boto3-classic|cli-crt|cli-classic)
         "$REPO_ROOT/install/python-venv/bin/python3" \
@@ -89,9 +89,9 @@ case "$CLIENT" in
         java -jar "$REPO_ROOT/source/runners/s3-java/target/s3-benchrunner-java-1.0-SNAPSHOT.jar" \
             "$CLIENT" "$TMP_WORKLOAD" "$BUCKET" "$REGION" "$THROUGHPUT"
         ;;
-    sdk-rust-tm)
+    sdk-rust-tm|rust)
         AWS_REGION="$REGION" "$REPO_ROOT/source/runners/s3-rust/target/release/s3-benchrunner-rust" \
-            "$CLIENT" "$TMP_WORKLOAD" "$BUCKET" "$REGION" "$THROUGHPUT"
+            "sdk-rust-tm" "$TMP_WORKLOAD" "$BUCKET" "$REGION" "$THROUGHPUT"
         ;;
     *)
         echo "Unknown client: $CLIENT"
